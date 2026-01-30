@@ -1,6 +1,5 @@
 package com.local;
 
-import java.awt.PointerInfo;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.FloatBuffer;
