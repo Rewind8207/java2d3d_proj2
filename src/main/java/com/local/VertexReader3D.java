@@ -131,7 +131,7 @@ public class VertexReader3D {
             vertices.set(i, 2, (oldZ - centerZ) * scale);
         }
         
-        System.out.printf("Normalization done. Scale: %.4f, Center: (%.2f, %.2f, %.2f)\n", 
+        System.out.printf("Vertices Normalization done. Scale: %.4f, Center: (%.2f, %.2f, %.2f)\n", 
                           scale, centerX, centerY, centerZ);
     }
 
