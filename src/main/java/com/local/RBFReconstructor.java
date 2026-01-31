@@ -9,6 +9,37 @@ import com.local.PointBuffer;
 
 public class RBFReconstructor {
 
+    public double evaluate(double x, double y, double z) {
+        if (m_Weights == null) return 0.0;
+        
+        int N = m_ConstraintPoints.size();
+        double sum = 0.0;
+
+        // 1. RBF 部分: sum( w_i * phi(|x - c_i|) )
+        for (int i = 0; i < N; i++) {
+            double w = m_Weights.get(i, 0);
+            
+            // 计算距离
+            double dx = x - m_ConstraintPoints.get(i, 0);
+            double dy = y - m_ConstraintPoints.get(i, 1);
+            double dz = z - m_ConstraintPoints.get(i, 2);
+            double r = Math.sqrt(dx*dx + dy*dy + dz*dz);
+            
+            sum += w * phi(r);
+        }
+
+        // 2. 多项式部分: c0 + c1*x + c2*y + c3*z
+        // 权重向量的最后4位对应多项式系数
+        double c0 = m_Weights.get(N + 0, 0);
+        double c1 = m_Weights.get(N + 1, 0);
+        double c2 = m_Weights.get(N + 2, 0);
+        double c3 = m_Weights.get(N + 3, 0);
+
+        sum += c0 + c1*x + c2*y + c3*z;
+
+        return sum;
+    }
+
     public void computeWeights(ArrayList<PointBuffer> cloudData) {
         var vertexBuffer = cloudData.get(0);
         var normalBuffer = cloudData.get(1);
@@ -190,9 +221,21 @@ public class RBFReconstructor {
         String resourceName = "bunny.xyz";
         var cloudData = VertexReader3D.readPointCloudData(resourceName);
         RBFReconstructor rbfReconstructor = new RBFReconstructor();
-        rbfReconstructor.setDownSamplingStep(10);
+        int downSamplingStep = 2;
+        rbfReconstructor.setDownSamplingStep(downSamplingStep);
         rbfReconstructor.computeWeights(cloudData);
 
         System.out.println("RBF Weights Computation Completed.");
+
+        var pointCoords = cloudData.get(0);
+
+        double sum = 0.0;
+        for (int i = 0; i < 100; i += downSamplingStep) {
+            double x = pointCoords.get(i, 0);
+            double y = pointCoords.get(i, 1);
+            double z = pointCoords.get(i, 2);
+            sum += rbfReconstructor.evaluate(x, y, z);
+        }
+        System.out.println("Sum of RBF evaluation: " + sum/50.0);
     }
 }
