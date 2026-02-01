@@ -4,6 +4,15 @@
 
 This project is a Java-based implementation of 3D surface reconstruction. It takes a sparse 3D point cloud as input, constructs an implicit surface using **Radial Basis Functions (RBF)**, and generates a polygonal mesh using the **Marching Cubes** algorithm. The result is rendered in real-time using OpenGL (LWJGL) with dynamic lighting and animation.
 
+## Demo
+
+<table>
+  <tr>
+    <td><img src="bunny_Mesh.gif" width="100%"></td>
+    <td><img src="bunny_pointCloud.gif" width="100%"></td>
+  </tr>
+</table>
+
 ## Key Features
 
 ### 1. Implicit Surface Reconstruction (RBF)
