@@ -1,7 +1,5 @@
 package com.local;
 
-import java.nio.FloatBuffer;
-
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 
 /**
@@ -105,18 +103,6 @@ public class PointBuffer {
         for (int i = 0; i < headlines; i++) {
             System.out.println("Point " + i + ": (" + get(i,0) + ", " + get(i,1) + ", " + get(i,2) + ")");
         }
-    }
-
-    public void fillFloatBuffer(FloatBuffer buffer) {
-        // FastUtil 允许我们直接访问底层数组，性能极高
-        // m_Data.elements() 返回的是 double[] 原始数组
-        double[] rawArray = m_Data.elements();
-        int len = m_Data.size();
-        
-        for (int i = 0; i < len; i++) {
-            buffer.put((float) rawArray[i]);
-        }
-        buffer.flip();
     }
 
     // Raw data array storing point coordinates
