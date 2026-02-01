@@ -1,5 +1,7 @@
 package com.local;
 
+import java.nio.FloatBuffer;
+
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 
 /**
@@ -7,6 +9,12 @@ import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 * Data storage format: (x0, y0, z0, x1, y1, z1, ...)
  */
 public class PointBuffer {
+    /**
+     * Default constructor, creates an empty PointBuffer.
+     */
+    public PointBuffer() {
+        m_Data = new DoubleArrayList(0);
+    }
     /**
      * @param numPoints Number of points (the data length will be numPoints*3).
      */
@@ -97,6 +105,18 @@ public class PointBuffer {
         for (int i = 0; i < headlines; i++) {
             System.out.println("Point " + i + ": (" + get(i,0) + ", " + get(i,1) + ", " + get(i,2) + ")");
         }
+    }
+
+    public void fillFloatBuffer(FloatBuffer buffer) {
+        // FastUtil 允许我们直接访问底层数组，性能极高
+        // m_Data.elements() 返回的是 double[] 原始数组
+        double[] rawArray = m_Data.elements();
+        int len = m_Data.size();
+        
+        for (int i = 0; i < len; i++) {
+            buffer.put((float) rawArray[i]);
+        }
+        buffer.flip();
     }
 
     // Raw data array storing point coordinates
