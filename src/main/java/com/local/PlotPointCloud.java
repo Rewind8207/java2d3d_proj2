@@ -81,19 +81,26 @@ public class PlotPointCloud {
         GL30.glBindVertexArray(vao);
         GL20.glEnableVertexAttribArray(0);
         GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 0, 0);
-      
+        
+        int locAngle = GL20.glGetUniformLocation(program, "angle");
       
         // Loop and render
         while (!GLFW.glfwWindowShouldClose(window)) {
-          GLFW.glfwPollEvents();
-        
-          GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-          GL30.glBindVertexArray(vao);
-          // GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 3);
-          GL11.glPointSize(3.0f); 
-          GL11.glDrawArrays(GL11.GL_POINTS, 0, pointCount);
-        
-          GLFW.glfwSwapBuffers(window);
+            GLFW.glfwPollEvents();
+            
+            GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+            GL30.glBindVertexArray(vao);
+            
+            double time = GLFW.glfwGetTime(); 
+            // compute current angle
+            float currentAngle = (float) (-time * 0.5); 
+            // pass angle to shader
+            GL20.glUniform1f(locAngle, currentAngle);
+
+            GL11.glPointSize(3.0f); 
+            GL11.glDrawArrays(GL11.GL_POINTS, 0, pointCount);
+            
+            GLFW.glfwSwapBuffers(window);
         }
       
       

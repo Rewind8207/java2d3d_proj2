@@ -124,7 +124,6 @@ public class PlotRBFSurface {
         GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
         // GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
 
-        // 1. 获取 uniform "angle" 的位置
         int locAngle = GL20.glGetUniformLocation(program, "angle");
       
         // Loop and render
@@ -135,10 +134,9 @@ public class PlotRBFSurface {
             GL30.glBindVertexArray(vao);
 
             double time = GLFW.glfwGetTime(); 
-            // 计算角度 (例如：每秒转 1 弧度)
+            // compute current angle
             float currentAngle = (float) (-time * 0.5); 
-
-            // 传给 Shader
+            // pass angle to shader
             GL20.glUniform1f(locAngle, currentAngle);
 
             // Draw the reconstructed triangle mesh

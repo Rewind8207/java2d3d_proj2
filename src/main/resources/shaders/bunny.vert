@@ -2,13 +2,15 @@
 
 in vec3 v;
 
+uniform float angle;
+
+
 void main() {
     
     float scale = 0.7;
     vec3 pos = v * scale;
     pos.y -= 0.1;
     
-    float angle = 0.0 * 3.14159;
     float s = sin(angle);
     float c = cos(angle);
     
