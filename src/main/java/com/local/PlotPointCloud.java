@@ -41,10 +41,10 @@ public class PlotPointCloud {
         GL11.glClearDepth(1.0f);
       
         // Vertex shader
-        var vertex_shader = loadResourceShader("shaders/bunny.vert");
+        var vertex_shader = loadResourceShader("shaders/pointCloud_vertShader.glsl");
 
         // Fragment shader
-        var fragment_shader = loadResourceShader("shaders/bunny.frag");
+        var fragment_shader = loadResourceShader("shaders/pointCloud_fragShader.glsl");
 
 
         // Compile and link shaders
