@@ -25,37 +25,7 @@ This project is a Java-based implementation of 3D surface reconstruction. It tak
 ## Project Structure
 
 ```text
-src
-  ├───main
-  │   ├───java
-  │   │   └───com
-  │   │       └───local
-  |   |               Main.java
-  │   │               MarchingCubesGenerator.java
-  │   │               MarchingCubeTable.java
-  │   │               PlotPointCloud.java  // Main function for visualizing point cloud
-  │   │               PlotRBFSurface.java	// Main function for visualizing 3D objects
-  │   │               PointBuffer.java
-  │   │               RBFReconstructor.java
-  │   │               VertexReader3D.java
-  │   │
-  │   └───resources
-  │       │   2torus.xyz
-  │       │   armadillo.xyz
-  │       │   bunny.xyz
-  │       │
-  │       └───shaders
-  │               Phong_fragment_shader.glsl
-  │               Phong_vertex_shader.glsl
-  │               pointCloud_fragShader.glsl
-  │               pointCloud_vertShader.glsl
-  │               simpleRBF_fragShader.glsl
-  │               simpleRBF_vertShader.glsl
-  │
-  └───test
-      └───java
-      
- src/main/java/com/local/
+src/main/java/com/local/
 ├── MarchingCubesGenerator.java  // Grid traversal & triangulation logic
 ├── MarchingCubeTable.java       // Lookup tables for edges and triangles
 ├── PointBuffer.java             // Efficient memory structure for 3D points
