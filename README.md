@@ -1,8 +1,8 @@
-# Discrete 2D Closed Curvature Visualizer
+# Surface Reconstruction with RBF & Marching Cubes
 
 ##  Overview
 
-This is a Java-based program for Java 2D and 3D course. This project demonstrates 2d closed curves and their tangent and normal vecors, and how curves evolve by curvature flow.
+This is a Java-based project for Java 2D and 3D course. This project demonstrates 2d closed curves and their tangent and normal vecors, and how curves evolve by curvature flow.
 ![Demo](Disk.gif)
 
 Features
@@ -15,13 +15,33 @@ Features
 ## Project Structure
 
 ```text
-src/
-├── main/
-│   ├── java/
-│   │   └── com/
-│   │       └── local/
-│   │           ├── Main.java     # Main function
-│   │           └── VertFileReader.java # Data File Reader
-│   └── resources/
-│       └── *.vert                      # Data files with vextex coordinates of curves
+src
+  ├───main
+  │   ├───java
+  │   │   └───com
+  │   │       └───local
+  |   |               Main.java
+  │   │               MarchingCubesGenerator.java
+  │   │               MarchingCubeTable.java
+  │   │               PlotPointCloud.java  // Main function for visualizing point cloud
+  │   │               PlotRBFSurface.java	// Main function for visualizing 3D objects
+  │   │               PointBuffer.java
+  │   │               RBFReconstructor.java
+  │   │               VertexReader3D.java
+  │   │
+  │   └───resources
+  │       │   2torus.xyz
+  │       │   armadillo.xyz
+  │       │   bunny.xyz
+  │       │
+  │       └───shaders
+  │               Phong_fragment_shader.glsl
+  │               Phong_vertex_shader.glsl
+  │               pointCloud_fragShader.glsl
+  │               pointCloud_vertShader.glsl
+  │               simpleRBF_fragShader.glsl
+  │               simpleRBF_vertShader.glsl
+  │
+  └───test
+      └───java
 ```
