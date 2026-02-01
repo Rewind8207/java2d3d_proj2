@@ -29,9 +29,9 @@ public class MarchingCubesGenerator {
         m_MeshVertices.clear();
 
         // cube grid ranges
-        double minX = -1.2, maxX = 1.2;
-        double minY = -1.2, maxY = 1.2;
-        double minZ = -1.2, maxZ = 1.2;
+        double minX = -1.1, maxX = 1.1;
+        double minY = -1.1, maxY = 1.1;
+        double minZ = -1.1, maxZ = 1.1;
 
         double stepX = (maxX - minX) / cubeNumX;
         double stepY = (maxY - minY) / cubeNumY;

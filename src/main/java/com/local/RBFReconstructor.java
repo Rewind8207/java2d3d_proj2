@@ -1,6 +1,18 @@
 package com.local;
 
 import org.ejml.simple.SimpleMatrix;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import com.local.VertexReader3D;
@@ -51,6 +63,30 @@ public class RBFReconstructor {
         BuildRBFMatrixAndSolve();
     }
 
+    public void computeWeights(String resourceName) {
+        // Load point cloud data
+        var cloudData = VertexReader3D.readPointCloudData(resourceName);
+
+        var vertexBuffer = cloudData.get(0);
+        var normalBuffer = cloudData.get(1);
+
+        // Generate constraints
+        generateConstraints(vertexBuffer, normalBuffer);
+
+        boolean readWeights = 
+        loadWeightsFromFile(resourceName + "_downSamplingStep" + m_iDownSamplingStep + ".rbfweights");
+
+        if (readWeights) {
+            System.out.println("RBF Weights loaded from file.");
+            return;
+        }
+        // Compute RBF Weights
+        BuildRBFMatrixAndSolve();
+        // Save weights to file
+        saveWeightsToFile(resourceName + "_downSamplingStep" + m_iDownSamplingStep + ".rbfweights");
+        System.out.println("RBF Weights computed and saved to file.");
+    }
+
     public SimpleMatrix getM_Weights() {
         return m_Weights;
     }
@@ -60,6 +96,101 @@ public class RBFReconstructor {
         System.out.println("Down-sampling step set to: " + m_iDownSamplingStep);
     }
 
+    /**
+     * get local cache file path
+     */
+    private Path getCacheFilePath(String filename) {
+
+        return Paths.get("RBF_Cache", filename);
+    }
+
+    /**
+     * save weights to local cache file
+     */
+    private void saveWeightsToFile(String filename) {
+        if (m_Weights == null) {
+            System.err.println("Cannot save: No weights computed.");
+            return;
+        }
+
+        try {
+            Path filePath = getCacheFilePath(filename);
+
+            // ensure parent directories exist
+            if (filePath.getParent() != null && !Files.exists(filePath.getParent())) {
+                Files.createDirectories(filePath.getParent());
+            }
+
+            System.out.println("Saving weights to local cache: " + filePath.toAbsolutePath());
+
+            // save to file
+            try (DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(filePath.toFile())))) {
+                int rows = m_Weights.numRows();
+                int cols = m_Weights.numCols();
+
+                out.writeInt(rows);
+                out.writeInt(cols);
+
+                for (int r = 0; r < rows; r++) {
+                    for (int c = 0; c < cols; c++) {
+                        out.writeDouble(m_Weights.get(r, c));
+                    }
+                }
+            }
+            System.out.println("Save successful!");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Failed to save weights file.");
+        }
+    }
+
+    /**
+     * load weights from local cache file
+     */
+    private boolean loadWeightsFromFile(String filename) {
+        Path filePath = getCacheFilePath(filename);
+
+        // check if file exists
+        if (!Files.exists(filePath)) {
+            return false;
+        }
+
+        System.out.println("Loading weights from local cache: " + filePath.toAbsolutePath());
+        long start = System.currentTimeMillis();
+
+        try (DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(filePath.toFile())))) {
+            int rows = in.readInt();
+            int cols = in.readInt();
+
+            // check cache dimensions
+            if (m_ConstraintPoints != null) {
+                int expectedRows = m_ConstraintPoints.size() + 4;
+                if (rows != expectedRows) {
+                    System.err.println("Cache mismatch! Expected rows: " + expectedRows + ", Found: " + rows);
+                    System.err.println("The parameters (step or epsilon) might have changed. Recomputing...");
+                    return false;
+                }
+            }
+
+            // load weights
+            m_Weights = new SimpleMatrix(rows, cols);
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    m_Weights.set(r, c, in.readDouble());
+                }
+            }
+
+            System.out.println("Load finished in " + (System.currentTimeMillis() - start) + "ms");
+            return true;
+
+        } catch (IOException e) {
+            System.err.println("Error loading weights: " + e.getMessage());
+            return false;
+        }
+    }
+
+    
     private void generateConstraints(PointBuffer originalPoints, PointBuffer originalNormals) {
         int numPointCloud = originalPoints.size();
         // ceiling function for integer

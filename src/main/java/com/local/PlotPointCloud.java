@@ -19,7 +19,7 @@ import com.local.VertexReader3D;
 public class PlotPointCloud {
 
     // Draw a triangle with vertices in NDC
-    private void show(String resourceName) {
+    public void show(String resourceName) {
 
         // Create GL context and GLFW window
         GLFWErrorCallback errorCallback = GLFWErrorCallback.createPrint(System.err);

@@ -23,7 +23,7 @@ import com.local.MarchingCubesGenerator;
 public class PlotRBFSurface {
 
     // Draw a triangle with vertices in NDC
-    private void show(String resourceName) {
+    public void show(String resourceName) {
 
         // Create GL context and GLFW window
         GLFWErrorCallback errorCallback = GLFWErrorCallback.createPrint(System.err);
@@ -43,60 +43,28 @@ public class PlotRBFSurface {
         GL.createCapabilities();
         GL11.glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
         GL11.glClearDepth(1.0f);
-        
-        
-        String vertex_shader = "#version 330 core\n" +
-                "layout (location = 0) in vec3 aPos;\n" +
-                "layout (location = 1) in vec3 aNormal;\n" + 
-                "out vec3 Normal;\n" +
-                "out vec3 FragPos;\n" +
-                "void main() {\n" +
-                "    float scale = 0.7;\n" +
-                "    vec3 pos = aPos * scale;\n" +
-                "    gl_Position = vec4(pos, 1.0);\n" + 
-                "    FragPos = pos;\n" + 
-                "    Normal = aNormal;\n" + 
-                "}";
 
-        String fragment_shader = "#version 330 core\n" +
-                "out vec4 FragColor;\n" +
-                "in vec3 Normal;\n" +
-                "in vec3 FragPos;\n" +
-                "void main() {\n" +
-                "    // set color\n" +
-                "    vec3 objectColor = vec3(0.5, 0.5, 0.5);\n" + 
-                "    vec3 lightDir = normalize(vec3(0.0, -1.0, 0.5));\n" + 
-                "    vec3 viewDir = vec3(0.0, 0.0, 1.0);\n" + 
-                "    vec3 norm = normalize(Normal);\n" +
-                
-                "    // Ambient\n" +
-                "    float ambient = 0.2;\n" +
-                
-                "    // Diffuse\n" +
-                "    float diff = max(dot(norm, lightDir), 0.0);\n" +
-                
-                "    // Specular\n" +
-                "    vec3 reflectDir = reflect(-lightDir, norm);\n" +
-                "    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);\n" +
-                "    float specularStrength = 0.5;\n" +
-                
-                "    // combine\n" +
-                "    vec3 result = (ambient + diff + specularStrength * spec) * objectColor;\n" +
-                "    FragColor = vec4(result, 1.0);\n" +
-                "}";
         // Vertex shader
-        // var vertex_shader = loadResourceShader("shaders/simpleRBF_vertShader.glsl");
+        var vertex_shader = loadResourceShader("shaders/Phong_vertex_shader.glsl");
         // Fragment shader
-        // var fragment_shader = loadResourceShader("shaders/simpleRBF_fragShader.glsl");
+        var fragment_shader = loadResourceShader("shaders/Phong_fragment_shader.glsl");
 
         // Compile and link shaders
         int vs = GL20.glCreateShader(GL20.GL_VERTEX_SHADER);
         GL20.glShaderSource(vs, vertex_shader);
         GL20.glCompileShader(vs);
+        // Check for compile errors
+        if (GL20.glGetShaderi(vs, GL20.GL_COMPILE_STATUS) == GL11.GL_FALSE) {
+            System.err.println("Vertex Shader Error: " + GL20.glGetShaderInfoLog(vs));
+        }
 
         int fs = GL20.glCreateShader(GL20.GL_FRAGMENT_SHADER);
         GL20.glShaderSource(fs, fragment_shader);
         GL20.glCompileShader(fs);
+        // Check for compile errors
+        if (GL20.glGetShaderi(fs, GL20.GL_COMPILE_STATUS) == GL11.GL_FALSE) {
+            System.err.println("Fragment Shader Error: " + GL20.glGetShaderInfoLog(fs));
+        }
 
         int program = GL20.glCreateProgram();
         GL20.glAttachShader(program, vs);
@@ -104,12 +72,12 @@ public class PlotRBFSurface {
         GL20.glLinkProgram(program);
         GL20.glUseProgram(program);
       
-        var cloudData = VertexReader3D.readPointCloudData(resourceName);
+        // var cloudData = VertexReader3D.readPointCloudData(resourceName);
         
         // RFV surface reconstruction
         RBFReconstructor rbf = new RBFReconstructor();
         rbf.setDownSamplingStep(3);
-        rbf.computeWeights(cloudData);
+        rbf.computeWeights(resourceName);
 
         // Marching Cubes mesh generation
         MarchingCubesGenerator mc = new MarchingCubesGenerator(rbf);
@@ -155,6 +123,9 @@ public class PlotRBFSurface {
         GL11.glEnable(GL11.GL_DEPTH_TEST);
         GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
         // GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
+
+        // 1. 获取 uniform "angle" 的位置
+        int locAngle = GL20.glGetUniformLocation(program, "angle");
       
         // Loop and render
         while (!GLFW.glfwWindowShouldClose(window)) {
@@ -162,6 +133,13 @@ public class PlotRBFSurface {
             
             GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
             GL30.glBindVertexArray(vao);
+
+            double time = GLFW.glfwGetTime(); 
+            // 计算角度 (例如：每秒转 1 弧度)
+            float currentAngle = (float) (-time * 0.5); 
+
+            // 传给 Shader
+            GL20.glUniform1f(locAngle, currentAngle);
 
             // Draw the reconstructed triangle mesh
             GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, vertexCount);
@@ -192,6 +170,6 @@ public class PlotRBFSurface {
     }
 
     public static void main(String[] args) {
-        new PlotRBFSurface().show("armadillo.xyz");
+        new PlotRBFSurface().show("bunny.xyz");
     }
 }
