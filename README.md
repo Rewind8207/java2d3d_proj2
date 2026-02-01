@@ -1,16 +1,26 @@
 # Surface Reconstruction with RBF & Marching Cubes
 
-##  Overview
+##  Introduction
 
-This is a Java-based project for Java 2D and 3D course. This project demonstrates 2d closed curves and their tangent and normal vecors, and how curves evolve by curvature flow.
-![Demo](Disk.gif)
+This project is a Java-based implementation of 3D surface reconstruction. It takes a sparse 3D point cloud as input, constructs an implicit surface using **Radial Basis Functions (RBF)**, and generates a polygonal mesh using the **Marching Cubes** algorithm. The result is rendered in real-time using OpenGL (LWJGL) with dynamic lighting and animation.
 
-Features
-* **Geometric Visualization**:
-    * 2D curves visualization.
-    * Visualizes **Tangent** (Blue) and **Normal** (Green) vectors.
-    * Curvature Flow
-* **Auto-Scaling & Centering**: Automatically adjust curves to be shown in the center of the panel.
+## Key Features
+
+### 1. Implicit Surface Reconstruction (RBF)
+
+- Solves the linear system $Ax=b$ to determine RBF weights.
+- Uses a linear polynomial term $\hat{f}(x)=p(x)+\sum \lambda_{i}\varphi(||x-x_{i}||)$ to interpolate the surface.
+- Generates "Off-surface constraints" ($\pm \epsilon$) along normal vectors to avoid trivial zero solutions.
+
+### 2. Marching Cubes Mesh Generation
+
+- Converts the implicit field into a triangle mesh using the standard 256-case lookup table.
+- **High-Quality Normals**: Instead of averaging triangle face normals, this implementation calculates **analytical gradients** of the RBF function to generate smooth, per-vertex normals.
+
+### 3. Rendering & Animation
+
+- **Phong Shading**: Implemented in GLSL shaders for realistic lighting (Ambient + Diffuse + Specular).
+- **Vertex Shader Animation**: The model performs a real-time rotation around the Y-axis.
 
 ## Project Structure
 
@@ -44,4 +54,23 @@ src
   │
   └───test
       └───java
+      
+ src/main/java/com/local/
+├── MarchingCubesGenerator.java  // Grid traversal & triangulation logic
+├── MarchingCubeTable.java       // Lookup tables for edges and triangles
+├── PointBuffer.java             // Efficient memory structure for 3D points
+├── RBFReconstructor.java        // RBF solver, constraint generation, & File IO
+├── PlotRBFSurface.java          // MAIN ENTRY: OpenGL setup, render loop
+├── PlotPointCloud.java          // Utility to view raw .xyz files
+└── VertexReader3D.java          // Parses .xyz files & normalizes coordinates
+
+src/main/resources/shaders/
+├── Phong_vertex_shader.glsl     // Handles position, rotation animation
+├── Phong_fragment_shader.glsl   // Handles lighting calculations
+├── pointCloud_fragShader.glsl
+├── pointCloud_vertShader.glsl
+├── simpleRBF_fragShader.glsl
+└── simpleRBF_vertShader.glsl
+
+RBF_Cache/                       // Auto-generated binary weight files
 ```
