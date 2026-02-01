@@ -2,14 +2,21 @@ package com.local;
 
 public class MarchingCubesGenerator {
 
-    private RBFReconstructor m_RBF;
-    
-    private PointBuffer m_MeshVertices; 
-
     public MarchingCubesGenerator(RBFReconstructor rbf) {
         m_RBF = rbf;
         m_MeshVertices = new PointBuffer();
         m_MeshVertices.reserve(20000);
+
+        m_MeshNormals = new PointBuffer();
+        m_MeshNormals.reserve(20000);
+    }
+
+    public PointBuffer getVertices() {
+        return m_MeshVertices; 
+    }
+
+    public PointBuffer getNormals() {
+        return m_MeshNormals;
     }
 
     /**
@@ -117,9 +124,9 @@ public class MarchingCubesGenerator {
                         int i2 = MarchingCubeTable.m_TriTable[cubeIndex][ii+1];
                         int i3 = MarchingCubeTable.m_TriTable[cubeIndex][ii+2];
                         
-                        m_MeshVertices.pushBack(vertList[i1][0], vertList[i1][1], vertList[i1][2]);
-                        m_MeshVertices.pushBack(vertList[i2][0], vertList[i2][1], vertList[i2][2]);
-                        m_MeshVertices.pushBack(vertList[i3][0], vertList[i3][1], vertList[i3][2]);
+                        pushBackVertAndNormals(vertList[i1]);
+                        pushBackVertAndNormals(vertList[i2]);
+                        pushBackVertAndNormals(vertList[i3]);
                     }
                 }
             }
@@ -158,7 +165,29 @@ public class MarchingCubesGenerator {
         interpCoords[2] = coordsA[2] + mu * (coordsB[2] - coordsA[2]);
     }
 
-    public PointBuffer getVertices() {
-        return m_MeshVertices; 
+    private double[] getGradient(double x, double y, double z) {
+        double delta = 0.01;
+        // partial derivatives
+        double dx = m_RBF.evaluate(x + delta, y, z) - m_RBF.evaluate(x - delta, y, z);
+        double dy = m_RBF.evaluate(x, y + delta, z) - m_RBF.evaluate(x, y - delta, z);
+        double dz = m_RBF.evaluate(x, y, z + delta) - m_RBF.evaluate(x, y, z - delta);
+
+        double len = Math.sqrt(dx*dx + dy*dy + dz*dz);
+        if (len < 1e-9) return new double[]{0, 1, 0};
+        return new double[]{-dx/len, -dy/len, -dz/len};
     }
+
+    private void pushBackVertAndNormals(double[] coords) {
+        m_MeshVertices.pushBack(coords[0], coords[1], coords[2]);
+        // compute normals using RBF gradients
+        double[] normalComponents = getGradient(coords[0], coords[1], coords[2]);
+        m_MeshNormals.pushBack(normalComponents[0], normalComponents[1], normalComponents[2]);
+    }
+    
+    private RBFReconstructor m_RBF;
+    
+    private PointBuffer m_MeshVertices; 
+
+    private PointBuffer m_MeshNormals;
+
 }

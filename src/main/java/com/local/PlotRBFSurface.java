@@ -43,26 +43,51 @@ public class PlotRBFSurface {
         GL.createCapabilities();
         GL11.glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
         GL11.glClearDepth(1.0f);
-      
-        // Vertex shader
-        var vertex_shader = loadResourceShader("shaders/simpleRBF_vertShader.glsl");
-        // Fragment shader
-        var fragment_shader = loadResourceShader("shaders/simpleRBF_fragShader.glsl");
+        
+        
+        String vertex_shader = "#version 330 core\n" +
+                "layout (location = 0) in vec3 aPos;\n" +
+                "layout (location = 1) in vec3 aNormal;\n" + 
+                "out vec3 Normal;\n" +
+                "out vec3 FragPos;\n" +
+                "void main() {\n" +
+                "    float scale = 0.7;\n" +
+                "    vec3 pos = aPos * scale;\n" +
+                "    gl_Position = vec4(pos, 1.0);\n" + 
+                "    FragPos = pos;\n" + 
+                "    Normal = aNormal;\n" + 
+                "}";
 
-        // String vertex_shader = "#version 330 core\n" +
-        //         "layout (location = 0) in vec3 aPos;\n" +
-        //         "void main() {\n" +
-        //         "    gl_Position = vec4(aPos, 1.0);\n" + 
-        //         "}";
+        String fragment_shader = "#version 330 core\n" +
+                "out vec4 FragColor;\n" +
+                "in vec3 Normal;\n" +
+                "in vec3 FragPos;\n" +
+                "void main() {\n" +
+                "    // set color\n" +
+                "    vec3 objectColor = vec3(0.5, 0.5, 0.5);\n" + 
+                "    vec3 lightDir = normalize(vec3(0.0, -1.0, 0.5));\n" + 
+                "    vec3 viewDir = vec3(0.0, 0.0, 1.0);\n" + 
+                "    vec3 norm = normalize(Normal);\n" +
                 
-        // String fragment_shader = "#version 330 core\n" +
-        //         "out vec4 FragColor;\n" +
-        //         "void main() {\n" +
-        //         "    FragColor = vec4(1.0, 0.5, 0.2, 1.0);\n" +
-        //         "}";
-
-
-
+                "    // Ambient\n" +
+                "    float ambient = 0.2;\n" +
+                
+                "    // Diffuse\n" +
+                "    float diff = max(dot(norm, lightDir), 0.0);\n" +
+                
+                "    // Specular\n" +
+                "    vec3 reflectDir = reflect(-lightDir, norm);\n" +
+                "    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);\n" +
+                "    float specularStrength = 0.5;\n" +
+                
+                "    // combine\n" +
+                "    vec3 result = (ambient + diff + specularStrength * spec) * objectColor;\n" +
+                "    FragColor = vec4(result, 1.0);\n" +
+                "}";
+        // Vertex shader
+        // var vertex_shader = loadResourceShader("shaders/simpleRBF_vertShader.glsl");
+        // Fragment shader
+        // var fragment_shader = loadResourceShader("shaders/simpleRBF_fragShader.glsl");
 
         // Compile and link shaders
         int vs = GL20.glCreateShader(GL20.GL_VERTEX_SHADER);
@@ -90,34 +115,46 @@ public class PlotRBFSurface {
         MarchingCubesGenerator mc = new MarchingCubesGenerator(rbf);
         mc.generateMesh(60, 60, 60);
         var meshVerts = mc.getVertices();
+        var meshNormals = mc.getNormals();
         int vertexCount = meshVerts.size();
         if (vertexCount == 0) {
             System.err.println("No surface generated!");
             return;
         }
 
-        FloatBuffer fbo = BufferUtils.createFloatBuffer(vertexCount * 3);
+        FloatBuffer vertBuffer = BufferUtils.createFloatBuffer(vertexCount * 3);
+        FloatBuffer normalsBuffer = BufferUtils.createFloatBuffer(vertexCount * 3);
         for(int i=0; i<vertexCount; i++) {
-             fbo.put((float)meshVerts.get(i, 0));
-             fbo.put((float)meshVerts.get(i, 1));
-             fbo.put((float)meshVerts.get(i, 2));
+             vertBuffer.put((float)meshVerts.get(i, 0));
+             vertBuffer.put((float)meshVerts.get(i, 1));
+             vertBuffer.put((float)meshVerts.get(i, 2));
+             normalsBuffer.put((float)meshNormals.get(i, 0));
+             normalsBuffer.put((float)meshNormals.get(i, 1));
+             normalsBuffer.put((float)meshNormals.get(i, 2));
         }
-        fbo.flip();
-      
-        int vbo = GL15.glGenBuffers();
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbo);
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, fbo, GL15.GL_STATIC_DRAW);
-      
+        vertBuffer.flip();
+        normalsBuffer.flip();
+
         int vao = GL30.glGenVertexArrays();
         GL30.glBindVertexArray(vao);
-        GL20.glEnableVertexAttribArray(0);
+      
+        int vboPos = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboPos);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, vertBuffer, GL15.GL_STATIC_DRAW);
         GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 0, 0);
+        GL20.glEnableVertexAttribArray(0);
+      
+        int vboNorm = GL15.glGenBuffers();
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboNorm);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, normalsBuffer, GL15.GL_STATIC_DRAW);
+        GL20.glVertexAttribPointer(1, 3, GL11.GL_FLOAT, false, 0, 0);
+        GL20.glEnableVertexAttribArray(1);
         
         // Set background color
-        GL11.glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
-        
-        // Turn on wireframe mode
-        GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
+        GL11.glClearColor(.9f, .9f, .9f, 1.0f);
+        GL11.glEnable(GL11.GL_DEPTH_TEST);
+        GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
+        // GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
       
         // Loop and render
         while (!GLFW.glfwWindowShouldClose(window)) {
@@ -134,7 +171,8 @@ public class PlotRBFSurface {
       
       
         // free resources
-        GL15.glDeleteBuffers(vbo);
+        GL15.glDeleteBuffers(vboPos);
+        // GL15.glDeleteBuffers(vboNorm);
         GL30.glDeleteVertexArrays(vao);
         GLFW.glfwDestroyWindow(window);
         GLFW.glfwTerminate();
@@ -153,27 +191,7 @@ public class PlotRBFSurface {
         return shader;
     }
 
-    /**
-     * Create shader program from vertex shader and fragment shader code
-     * @param vsCode vertex shader code
-     * @param fsCode fragment shader code
-     * @return
-     */
-    private int createShader(String vsCode, String fsCode) {
-        int vs = GL20.glCreateShader(GL20.GL_VERTEX_SHADER);
-        GL20.glShaderSource(vs, vsCode);
-        GL20.glCompileShader(vs);
-        int fs = GL20.glCreateShader(GL20.GL_FRAGMENT_SHADER);
-        GL20.glShaderSource(fs, fsCode);
-        GL20.glCompileShader(fs);
-        int prog = GL20.glCreateProgram();
-        GL20.glAttachShader(prog, vs);
-        GL20.glAttachShader(prog, fs);
-        GL20.glLinkProgram(prog);
-        return prog;
-    }
-
     public static void main(String[] args) {
-        new PlotRBFSurface().show("bunny.xyz");
+        new PlotRBFSurface().show("armadillo.xyz");
     }
 }
