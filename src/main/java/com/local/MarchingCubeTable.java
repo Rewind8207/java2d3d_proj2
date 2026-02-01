@@ -1,5 +1,11 @@
 package com.local;
 
+/**
+ * Marching Cubes lookup tables.
+ * Based on Paul Bourke's implementation:
+ * https://paulbourke.net/geometry/polygonise/
+ */
+
 public class MarchingCubeTable {
 
     public static final int[] m_EdgeTable = {
