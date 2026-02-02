@@ -73,7 +73,6 @@ public class PointBuffer {
         m_Data.add(x);
         m_Data.add(y);
         m_Data.add(z);
-        // 不需要写 ensureCapacity，也不需要判断越界，库全帮你做了
     }
 
     /**
