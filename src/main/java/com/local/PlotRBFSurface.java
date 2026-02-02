@@ -134,7 +134,7 @@ public class PlotRBFSurface {
             GL30.glBindVertexArray(vao);
 
             double time = GLFW.glfwGetTime(); 
-            // compute current angle
+            // compute angle
             float currentAngle = (float) (-time * 0.5); 
             // pass angle to shader
             GL20.glUniform1f(locAngle, currentAngle);

@@ -27,11 +27,11 @@ public class RBFReconstructor {
         int N = m_ConstraintPoints.size();
         double sum = 0.0;
 
-        // 1. RBF 部分: sum( w_i * phi(|x - c_i|) )
+        // phi
         for (int i = 0; i < N; i++) {
             double w = m_Weights.get(i, 0);
             
-            // 计算距离
+            // compute distance r
             double dx = x - m_ConstraintPoints.get(i, 0);
             double dy = y - m_ConstraintPoints.get(i, 1);
             double dz = z - m_ConstraintPoints.get(i, 2);
@@ -40,8 +40,7 @@ public class RBFReconstructor {
             sum += w * phi(r);
         }
 
-        // 2. 多项式部分: c0 + c1*x + c2*y + c3*z
-        // 权重向量的最后4位对应多项式系数
+        // polynomial terms
         double c0 = m_Weights.get(N + 0, 0);
         double c1 = m_Weights.get(N + 1, 0);
         double c2 = m_Weights.get(N + 2, 0);
